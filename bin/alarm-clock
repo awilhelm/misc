@@ -1,0 +1,20 @@
+#!/bin/sh
+# install with crontab -e
+# 30 7 * * 1-5 /usr/local/bin/alarm-clock
+
+{
+
+export $(cat $(for i in $(pgrep rhythmbox); do echo /proc/$i/environ; done) | tr '\0' '\n' | grep ^DBUS_SESSION_BUS_ADDRESS=)
+
+# démarre la radio silencieusement
+amixer sset Master playback 0% unmute
+rhythmbox-client --next --play
+sleep 5
+
+# augmente progressivement le volume
+for Volume in $(seq 5 5 50)
+do sleep 2
+amixer sset Master playback $Volume%
+done
+
+} 2>&1 | logger -it "$0"
