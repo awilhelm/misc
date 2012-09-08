@@ -1,0 +1,29 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: tune-cpufreq
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: System performance tuning
+# Description: System performance tuning
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+this=tune-cpufreq
+
+case "$1" in
+	start)
+		log_daemon_msg 'Tuning system performance' $this
+		modprobe acpi_cpufreq
+		echo 10 > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor
+		log_end_msg $?
+	;;
+	install)
+		log_daemon_msg 'Installing daemon' $this
+		ln -sf $(readlink -f "$0") /etc/init.d/$this
+		update-rc.d $this defaults > /dev/null
+		log_end_msg $?
+	;;
+esac
