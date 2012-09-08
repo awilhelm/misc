@@ -1,0 +1,7 @@
+{
+	"uuid": "misc",
+	"name": "More",
+	"description": "Customizes GNOME Shell",
+	"url": "https://github.com/awilhelm/gnome-shell-extensions",
+	"shell-version": ["3.0", "3.2", "3.4"]
+}
