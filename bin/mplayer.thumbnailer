@@ -1,0 +1,16 @@
+#!/bin/sh
+# also /usr/local/share/mplayer.thumbnailer
+
+width="$1"
+video="$2"
+image="$3"
+
+dir=$(mktemp -d)
+video=$(echo "$video" | perl -pe 's{^file://}{}; s{%(\w{2})}{chr(hex($1))}eg')
+flags=-really-quiet -nosound -nojoystick -nolirc -nortc -noautosub -noconsolecontrols -nomouseinput -nocache -nobps -nodouble -nograbpointer -nostop-xscreensaver -noordered-chapters -nosub -noautosub
+position=$(nice mplayer $flags -identify -frames 0 "$video" | perl -ne 'if(m{^ID_LENGTH=(.*)}){print($1/2)}')
+
+cd "$dir"
+nice mplayer $flags -vo png -xy "$width" -zoom -frames 1 -hr-seek off -ss "$position" "$video"
+cp 00000001.png "$image"
+rm -rf "$dir"
