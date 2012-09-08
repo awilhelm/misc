@@ -1,0 +1,41 @@
+
+## Système de base
+~E
+~pimportant!~slibs
+~prequired!~slibs
+~pstandard!~slibs
+task-gnome-desktop
+gnome
+
+## Spécifique à cette machine
+linux-image-686-pae
+linux-headers-686-pae
+libc6-i686
+
+## Alternatives
+gnote # et pas tomboy
+
+## Démarrage
+grub-pc
+os-prober
+
+## Firefox
+flashplugin-nonfree
+icedtea-plugin
+iceweasel-l10n-fr
+xul-ext-adblock-plus
+xul-ext-firebug
+
+
+
+#TODO add your own packages here
+
+
+
+## Pour vérifier que ce fichier est utile:
+## aptitude search '?installed !?automatic ?reverse-depends(?installed !?reverse-depends(?installed))'
+
+## Pour trouver des paquetages qu'il aurait peut-être fallu installer:
+## aptitude search '!?installed ?reverse-recommends(?installed)'
+## aptitude search '!?installed ?reverse-suggests(?installed)'
+

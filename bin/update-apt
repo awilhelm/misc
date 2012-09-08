@@ -1,0 +1,39 @@
+#!/bin/sh -e
+
+## Copyright 2010 Alexis Wilhelm
+## This program is Free Software under the Elvis Presley Licence:
+## You can do anything, but lay off of my blue suede shoes.
+
+## Installe ou supprime des paquets pour laisser le système dans l'état
+## dans lequel il serait s'il était fraîchement installé.
+
+## Utilisation: update-apt wanted.list
+
+[ "$*" ] || set -- /usr/local/etc/apt/wanted.list
+
+# Lit la liste des choses à faire.
+input=$(cat "$@" | cut -d# -f1 | tr -d [:blank:] | grep .)
+install=$(echo "$input" | grep -v '[=:]$')
+keep=$(echo "$input" | grep '[=:]$')
+mark=$(echo "$input" | grep -v '[_]$' | sed 's/[+=:]*$/\&m/')
+
+# Fait disparaître la liste des paquets installés.
+orig=$(mktemp)
+mv /var/lib/dpkg/status "$orig"
+>/var/lib/dpkg/status
+# Tout se passe désormais comme si le système était complètement vierge.
+
+# Trouve tous les paquets à installer.
+log=$(mktemp)
+aptitude --simulate --assume-yes --allow-untrusted --full-resolver --without-recommends install $install >"$log"
+
+# Rétablit la liste des paquets installés.
+mv "$orig" /var/lib/dpkg/status
+
+# Récupère la liste des paquets à installer.
+begin=$({ echo 0; grep -n '^$' "$log"; } | tail -1 | cut -d: -f1)
+goal=$(tail -n+$begin "$log" | grep '^[[:blank:]]' | tr -s [:space:] '\n' | sed 's/{.*}$//')
+rm "$log"
+
+# Applique les modifications.
+aptitude --prompt --full-resolver --without-recommends install '!~v_' '!~v&M' $goal $mark $keep
