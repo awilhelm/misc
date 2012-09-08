@@ -1,0 +1,35 @@
+#!/bin/sh
+
+if test $# -eq 0
+then
+	pkill -u "$USER" -P $(pgrep -x -d, wallpaper-roule) sleep
+	exit
+fi
+
+export PATH="$(dirname "$0")/../lib/$(basename "$0"):$PATH"
+
+export TMPDIR="${TMPDIR:-/tmp}/$(basename "$0")-$USER"
+mkdir -p "$TMPDIR"
+
+</proc/$$/cmdline tr \\0 \\n | tail -n+4 >"$TMPDIR/cmd"
+
+while true
+do
+	while test $(du -sB1 "$TMPDIR" | cut -f1) -gt 500000000
+	do find "$TMPDIR" -type f | xargs -rd \\n ls -rt | head -1 | xargs -rd \\n rm
+	done
+
+	while ! LC_ALL=C gnome-screensaver-command -q | grep -q 'inactive'
+	do sleep 1
+	done
+
+	{
+		file=$(xargs -d \\n env <"$TMPDIR/cmd") || continue
+		touch -c "$file"
+		gsettings set org.gnome.desktop.background picture-uri "file://$file"
+	} 2>&1 | awk '{print "icon: preferences-desktop-wallpaper"; print "message: " $0}'
+
+	sleep "$1"
+done | zenity --notification --listen
+
+kill 0

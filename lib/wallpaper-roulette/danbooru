@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# $1 = début de l'URL (exemple : http://konachan.com)
+# $2 = tags supplémentaires (exemple : rating:safe+order:score)
+# $3 = pages à explorer (exemple : 1-200)
+
+while ! nm-online -q
+do sleep 1
+done
+
+read width height ratio <<eof
+$(xdpyinfo | perl -ne '
+	if(m{dimensions:\s*(\d+)x(\d+)}){
+		print "$1 $2 ", ($1 / $2) ** .75;
+		exit}
+')
+eof
+
+local="${TMPDIR:?}/danbooru"
+mkdir -p "$local"
+
+remote=$(shuf -n1 -i "${3:?}")
+remote=$(wget -q -O- "${1:?}/post/index.json?page=$remote&tags=width:$width..+height:$height..+${2:?}" | perl -e '
+	use JSON::PP;
+	for(@{decode_json <>}){
+		if($$_{width} / $$_{height} > '"$ratio"'){
+			$$_{tags} =~ s{([[:punct:]])}{sprintf("%%%x",ord($1))}eg;
+			$$_{file_url} =~ m{(\.[^\.]*)$};
+			print "$$_{md5}$1 $$_{file_url} $$_{rating} $$_{score} $$_{tags}\n"}}
+' | shuf -n1)
+read local remote rating score tags <<eof
+	$local/$remote
+eof
+wget -q -c -O "$local" "$remote"
+echo "$local"
+
+tags=$(for tag in $tags
+do echo "$1/tag/index.json?limit=1&name=$tag*"
+done | wget -q -i- -O- | perl -e '
+	use JSON::PP;
+	$_ = <>;
+	s{(\]\s*\[)+}{,}g;
+	my @filters = (
+		sub{return "4\t$_[0],\n"}, # general
+		sub{$_[0] =~ s{((^|\s)\W*\w)}{\U$1}g; return "2\t✍ $_[0],\n"}, # artist
+		sub{return "6\t$_[0],\n"}, # ??
+		sub{$_[0] =~ s{((^|\s)\W*\w)}{\U$1}g; return "0\t$_[0],\n"}, # copyright
+		sub{$_[0] =~ s{((^|\s)\W*\w)}{\U$1}g; return "1\t✌ $_[0],\n"}, # character
+		sub{return "5\t$_[0],\n"}, # style
+		sub{$_[0] =~ s{((^|\s)\W*\w)}{\U$1}g; return "3\t✍ $_[0],\n"}); # circle
+	for(@{decode_json $_}){
+		$$_{name} =~ s{_}{ }g;
+		print &{$filters[$$_{type}]}($$_{name})}
+' | sort | cut -f2-)
+echo $tags $rating, $score >&2

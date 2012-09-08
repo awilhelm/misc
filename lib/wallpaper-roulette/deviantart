@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+# $1 = recherche (exemple : in:customization/wallpaper+boost:popular+max_age:744h)
+# $2 = pages à explorer (exemple : 1-10)
+
+while ! nm-online -q
+do sleep 1
+done
+
+ratio=$(xdpyinfo | perl -ne '
+	if(m{dimensions:\s*(\d+)x(\d+)}){
+		print(($1 / $2) ** .75);
+		exit}
+')
+
+local="${TMPDIR:?}/deviantart"
+mkdir -p "$local"
+
+remote=$((($(shuf -n1 -i "${2:-1-1}") - 1) * 60))
+remote=$(wget -q -O- "http://backend.deviantart.com/rss.xml?type=deviation&offset=$remote&q=$1" | python -c 'if True:
+	import os, sys, xml.etree.ElementTree
+	ns = "{http://search.yahoo.com/mrss/}"
+	for item in xml.etree.ElementTree.fromstring(sys.stdin.read()).findall(".//item"):
+		try:
+			image = item.find(ns + "content[@medium=\"image\"]")
+			document = item.find(ns + "content[@medium=\"document\"]")
+			if float(image.get("width")) / float(image.get("height")) > '"$ratio"': print "{} {} by {} on {}".format(document.get("url"), item.find(ns + "title").text, item.find(ns + "credit").text, item.find("pubDate").text)
+		except: pass
+' | shuf -n1)
+
+read remote description <<eof
+	$remote
+eof
+
+remote=$(wget -nv -O new "$remote" 2>&1 | perl -ne 'if(m{://\S*/(\S*)}){print $1}')
+
+mv new "$local/$remote"
+echo "$local/$remote"
+
+echo $description >&2

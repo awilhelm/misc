@@ -1,0 +1,31 @@
+#!/bin/sh
+
+cd "${TMPDIR:?}"
+
+while ! nm-online -q
+do sleep 1
+done
+
+read width height ratio <<eof
+$(xdpyinfo | perl -ne '
+	if(m{dimensions:\s*(\d+)x(\d+)}){
+		print "$1 $2 ", ($1 / $2) ** .75;
+		exit}
+')
+eof
+
+read url description <<eof
+$(wget -q -O- 'http://www.wizards.com/magic/magazine/downloads.aspx?x=mtg/daily/downloads/wallpapers' | perl -e '
+	use HTML::Entities;
+	undef $/;
+	$_ = <>;
+	@_ = m{<tr.*?>.*?<td class="small">.*?href="(.*?)".*?<td.*?>(.*?)</td>.*?<td.*?>(.*?)</td>.*?<td.*?>(.*?)</td>.*?<td.*?>(.*?)</td>.*?</tr>}gs;
+	while(my ($url, $card, $artist, $expansion, $date) = splice @_, 0, 5){
+		$expansion =~ s{<.*?>}{}g;
+		print decode_entities "$url $card by $artist, $expansion, $date\n"}
+' | shuf -n1)
+eof
+
+wget -q -O- "http://www.wizards.com$url" | perl -ne 'if(m{href="(.*?(\d+)x(\d+).*?)"} && $2 >= '"$width"' && $3 >= '"$height"'){print "$3\t$2\thttp://www.wizards.com$1\n"}' | sort -n | head -1 | cut -f3- | wget -nv -i- -x -c 2>&1 | perl -ne 'if(m{ -> "(.*)"}){print "'"$PWD"'/$1"}'
+
+echo $description >&2

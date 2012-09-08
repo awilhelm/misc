@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# $1 = nombre de paramètres pour la première commande
+# $2..$n = première commande
+# $n+1 = nombre de paramètres pour la deuxième commande
+# ...
+
+eval $(while test $# -gt 0
+do
+	for i in $(seq $1)
+	do
+		printf " '$2' "
+		shift
+	done
+	echo
+	shift
+done | shuf -n1)
