@@ -1,0 +1,40 @@
+@import url('/usr/share/gnome-shell/theme/gnome-shell.css');
+
+stage {
+	font-size: 9pt;
+}
+
+#panel {
+	background: rgba(0,0,0,0.2);
+	outline: 1px solid rgba(0,0,0,0.2);
+}
+
+.label-shadow {
+	color: transparent;
+}
+
+.panel-button {
+	color: white;
+}
+
+.panel-corner {
+	-panel-corner-radius: 0;
+}
+
+.popup-menu-boxpointer,
+.summary-boxpointer {
+	-arrow-border-width: 0;
+}
+
+.popup-menu-content {
+	padding: 1ex 0;
+}
+
+.popup-separator-menu-item {
+	height: 1ex;
+}
+
+StScrollBar StBin#trough {
+	background-color: transparent;
+	border: none;
+}
