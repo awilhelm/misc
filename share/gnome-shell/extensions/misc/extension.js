@@ -33,4 +33,23 @@ function init() {
 	imports.ui.main.panel._statusArea.userMenu._name.hide();
 
 
+/***********************************************************************
+	TITRE DE LA FENÊTRE DANS LE PANNEAU
+***********************************************************************/
+
+	function set_menu_label() {
+		if(window) {
+			window.disconnect(connection)
+		}
+		window = global.display.focus_window
+		imports.ui.main.panel._appMenu._label.setText(tracker.get_window_app(window).get_name() + ' - ' + window.title)
+		connection = window.connect('notify::title', set_menu_label)
+	}
+
+	let window = undefined
+	let connection = undefined
+	let tracker = imports.gi.Shell.WindowTracker.get_default()
+	tracker.connect('notify::focus-app', set_menu_label)
+
+
 /**/}
