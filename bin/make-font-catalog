@@ -1,0 +1,40 @@
+#!/bin/sh
+tmp=$(mktemp -d)
+(
+	cd "$tmp"
+	cat <<-eof
+		\\documentclass{minimal}
+		\\usepackage[utf8x]{inputenc}
+		\\usepackage[a4paper, margin=1cm]{geometry}
+		\\usepackage{graphicx}
+		\\parindent 0in
+		\\raggedright
+		\\begin{document}
+	eof
+	find "$@" -type f | while read file
+	do dirname "$file"
+	done | sort | uniq | while read path
+	do
+		echo '\\vspace\\baselineskip\\par\\verb\\'"$path"'\\\\hrule\\vspace{1ex}'
+		find "$path" -type f | sort | while read file
+		do
+			text="$(otfinfo -i "$file" | grep '^Full name:' | sed 's/^.*: *//' | sed -r 's/([\&\{\}\#\\])/\\\\\1/g')"
+			font="$(basename "$file")"
+			path="$(dirname "$file")"
+			sample="${font%.*}"
+			test "$text" && xelatex -jobname="$sample" 2>/dev/null 1>&2 <<-eof
+				\\documentclass{standalone}
+				\\usepackage[quiet]{fontspec}
+				\\setmainfont[Scale=2, ExternalLocation=$path/]{$font}
+				\\begin{document}
+				$text
+				\\end{document}
+			eof
+			test -r "$sample.pdf" && echo '\\includegraphics{'"$tmp/$sample.pdf"'}\\ \\hfill'
+		done
+		echo '\\par'
+	done
+	echo '\\end{document}'
+) | pdflatex -halt-on-error
+rm -rf "$tmp"
+kill -9 0
