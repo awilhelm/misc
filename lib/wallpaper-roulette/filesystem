@@ -3,5 +3,5 @@
 # $1.. = dossiers contenant des images (exemple : ~/Images)
 
 {
-	find "$@" -type f | shuf -n1 | tee /dev/stderr | xargs file -b
+	find "${@:-"$TMPDIR"}" -type f | shuf -n1 | tee /dev/stderr | xargs -d \\n file -b
 } 3>&2 2>&1 1>&3

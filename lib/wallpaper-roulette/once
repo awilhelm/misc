@@ -1,0 +1,7 @@
+#!/bin/sh
+
+: ${@:?} # commande à exécuter une seule fois
+: ${TMPDIR:?}
+
+mv "$TMPDIR/cmd~" "$TMPDIR/cmd"
+"$@"

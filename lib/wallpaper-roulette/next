@@ -1,0 +1,5 @@
+#!/bin/sh
+
+: ${TMPDIR:?}
+
+once xargs -rd \\n env <"$TMPDIR/cmd~"

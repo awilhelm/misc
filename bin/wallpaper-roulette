@@ -1,19 +1,25 @@
 #!/bin/sh
 
-if test $# -eq 0
-then
-	pkill -u "$USER" -P $(pgrep -x -d, wallpaper-roule) sleep
-	exit
-fi
+pid=$(pgrep -u "$USER" -x wallpaper-roule)
+pid=$(echo "$pid" | grep -v ^$$$ | tr [:space:] ,)
 
-export PATH="$(dirname "$0")/../lib/$(basename "$0"):$PATH"
+export PATH="$(dirname "$0")/../lib/wallpaper-roulette:$PATH"
 
-export TMPDIR="${TMPDIR:-/tmp}/$(basename "$0")-$USER"
+export TMPDIR="${XDG_CACHE_HOME:="$HOME/.cache"}/wallpaper-roulette"
 mkdir -p "$TMPDIR"
 
-</proc/$$/cmdline tr \\0 \\n | tail -n+4 >"$TMPDIR/cmd"
+if ! [ "$pid" ]
+then echo "$1" >"$TMPDIR/interval"
+shift
+fi
 
-while true
+mv "$TMPDIR/cmd" "$TMPDIR/cmd~"
+for a
+do echo "$a"
+done >"$TMPDIR/cmd"
+
+if ! [ "$pid" ]
+then while true
 do
 	while test $(du -sB1 "$TMPDIR" | cut -f1) -gt 500000000
 	do find "$TMPDIR" -type f | xargs -rd \\n ls -rt | head -1 | xargs -rd \\n rm
@@ -24,12 +30,11 @@ do
 	done
 
 	{
-		file=$(xargs -d \\n env <"$TMPDIR/cmd") || continue
+		file=$(xargs -rd \\n env <"$TMPDIR/cmd") || continue
 		touch -c "$file"
 		gsettings set org.gnome.desktop.background picture-uri "file://$file"
 	} 2>&1 | awk '{print "icon: preferences-desktop-wallpaper"; print "message: " $0}'
-
-	sleep "$1"
+	xargs sleep <"$TMPDIR/interval"
 done | zenity --notification --listen
-
-kill 0
+else pkill -P "$pid" xargs
+fi

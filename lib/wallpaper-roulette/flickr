@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# $1 = recherche (exemple : tags=wallpaper&sort=interestingness-desc)
-# $2 = pages à explorer (exemple : 1-10)
+: ${1:?} # recherche (exemple : tags=wallpaper&sort=interestingness-desc)
+: ${2:?} # pages à explorer (exemple : 1-10)
+: ${TMPDIR:?}
 
 while ! nm-online -q
 do sleep 1
@@ -15,24 +16,19 @@ $(xdpyinfo | perl -ne '
 ')
 eof
 
-local="${TMPDIR:?}/flickr"
-mkdir -p "$local"
-
-remote=$(shuf -n1 -i "${2:?}")
-remote=$(wget -q -O- "http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=c53cebd15ed936073134cec858036f1d&format=json&media=photos&license=1,2,3,4,5,6,7&extras=url_o,original_format,owner_name,date_taken&page=$remote&${1:?}" | perl -CSD -e '
-	use JSON::PP;
+url=$(shuf -n1 -i "$2")
+info=$(wget -q -O- "http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=c53cebd15ed936073134cec858036f1d&format=json&media=photos&license=1,2,3,4,5,6,7&extras=url_o,original_format,owner_name,date_taken&page=$url&$1" | perl -CSD -MJSON::PP -e '
 	$_ = <>;
 	s{.*?\((.*)\).*}{$1};
 	for(@{${${decode_json $_}{photos}}{photo}}){
 		if($$_{url_o} && $$_{width_o} >= '"$width"' && $$_{height_o} >= '"$height"' && $$_{width_o} / $$_{height_o} > '"$ratio"'){
-			print "$$_{id}.$$_{originalformat} $$_{url_o} $$_{title} by $$_{ownername}, $$_{datetaken}\n"}}
+			print "$$_{url_o} $$_{title} by $$_{ownername}, $$_{datetaken}\n"}}
 ' | shuf -n1)
 
-read local remote description <<eof
-	$local/$remote
+read url info <<eof
+	$info
 eof
 
-wget -q -c -O "$local" "$remote"
+wget -nv -c -x --protocol-directories -P "$TMPDIR" "$url" 2>&1 | perl -ne 'if(m{ -> "(.*)"}){print $1}'
 
-echo "$local"
-echo $description >&2
+echo "$info" >&2

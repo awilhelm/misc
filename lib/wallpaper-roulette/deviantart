@@ -1,7 +1,8 @@
 #!/bin/sh -e
 
-# $1 = recherche (exemple : in:customization/wallpaper+boost:popular+max_age:744h)
-# $2 = pages à explorer (exemple : 1-10)
+: ${1:?} # recherche (exemple : in:customization/wallpaper+boost:popular+max_age:744h)
+: ${2:?} # pages à explorer (exemple : 1-10)
+: ${TMPDIR:?}
 
 while ! nm-online -q
 do sleep 1
@@ -13,11 +14,8 @@ ratio=$(xdpyinfo | perl -ne '
 		exit}
 ')
 
-local="${TMPDIR:?}/deviantart"
-mkdir -p "$local"
-
-remote=$((($(shuf -n1 -i "${2:-1-1}") - 1) * 60))
-remote=$(wget -q -O- "http://backend.deviantart.com/rss.xml?type=deviation&offset=$remote&q=$1" | python -c 'if True:
+url=$((($(shuf -n1 -i "$2") - 1) * 60))
+info=$(wget -q -O- "http://backend.deviantart.com/rss.xml?type=deviation&offset=$url&q=$1" | python -c 'if True:
 	import os, sys, xml.etree.ElementTree
 	ns = "{http://search.yahoo.com/mrss/}"
 	for item in xml.etree.ElementTree.fromstring(sys.stdin.read()).findall(".//item"):
@@ -28,13 +26,10 @@ remote=$(wget -q -O- "http://backend.deviantart.com/rss.xml?type=deviation&offse
 		except: pass
 ' | shuf -n1)
 
-read remote description <<eof
-	$remote
+read url info <<eof
+	$info
 eof
 
-remote=$(wget -nv -O new "$remote" 2>&1 | perl -ne 'if(m{://\S*/(\S*)}){print $1}')
+LC_ALL=C wget --max-redirect=0 "$url" 2>&1 | perl -ne 'if(m{^Location:\s*(\S*)}){print $1}' | wget -nv -i- -c -x --protocol-directories -P "$TMPDIR" 2>&1 | perl -ne 'if(m{ -> "(.*)"}){print $1}'
 
-mv new "$local/$remote"
-echo "$local/$remote"
-
-echo $description >&2
+echo "$info" >&2
