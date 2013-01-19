@@ -1,0 +1,45 @@
+table,
+table input[type="text"]
+{
+	width: 100%;
+}
+
+fieldset
+{
+	margin-top: 1ex;
+}
+
+fieldset,
+input
+{
+	border: thin solid;
+	border-radius: 3px;
+}
+
+table+fieldset
+{
+	display: none;
+}
+
+.collapsed
+{
+	border-color: transparent;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+
+.collapsed a
+{
+	display: none;
+}
+
+.large *
+{
+	display: block;
+	margin: auto;
+}
+
+.small *
+{
+	height: 10ex;
+}

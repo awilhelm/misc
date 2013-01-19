@@ -1,0 +1,16 @@
+html
+{
+	background: #333;
+}
+
+fieldset,
+input
+{
+	border-color: black;
+}
+
+input
+{
+	background: #111;
+	color: #666;
+}

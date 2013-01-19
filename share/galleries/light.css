@@ -1,0 +1,16 @@
+html
+{
+	background: white;
+}
+
+fieldset,
+input
+{
+	border-color: #ccc;
+}
+
+input
+{
+	background: white;
+	color: #666;
+}
