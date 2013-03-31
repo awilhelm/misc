@@ -1,5 +1,5 @@
 #!/bin/sh
-# also /usr/local/share/mplayer.thumbnailer
+# also /usr/local/share/thumbnailers
 
 width="$1"
 video="$2"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# also /usr/local/share/comix.thumbnailer
+# also /usr/local/share/thumbnailers
 
 size="$1"
 input=$(echo "$2" | perl -pe 's{^file://}{}; s{%(\w{2})}{chr(hex($1))}eg')
