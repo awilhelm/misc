@@ -42,8 +42,10 @@ function init() {
 			window.disconnect(connection)
 		}
 		window = global.display.focus_window
-		imports.ui.main.panel._appMenu._label.setText(tracker.get_window_app(window).get_name() + ' - ' + window.title)
-		connection = window.connect('notify::title', set_menu_label)
+		if(window) {
+			imports.ui.main.panel._appMenu._label.setText(tracker.get_window_app(window).get_name() + ' - ' + window.title)
+			connection = window.connect('notify::title', set_menu_label)
+		}
 	}
 
 	let window = undefined
