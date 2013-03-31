@@ -14,8 +14,16 @@ function open_1_(format)
 {
 	// évalue les intervales de nombres
 	var ranges = format[2].split(/\s+/)
+	var new_ranges = []
+	var groups = [0]
 	for(var i in ranges)
 	{
+		if(ranges[i] == '*')
+		{
+			groups.push(0)
+			continue
+		}
+		++groups[groups.length - 1]
 		var range = ranges[i].split(',')
 		ranges[i] = []
 		for(var j in range)
@@ -38,25 +46,11 @@ function open_1_(format)
 				ranges[i].push(range[j])
 			}
 		}
-	}
-
-	// groupe les intervales pour obtenir une taille raisonable
-	var groups = [1]
-	var size = ranges[0].length
-	var max_size = format[1].length ? 372 : Infinity
-	for(var i = 1; i < ranges.length; ++i)
-	{
-		size *= ranges[i].length
-		if(size > max_size)
-		{
-			groups.push(0)
-			size = ranges[i].length
-		}
-		++groups[groups.length - 1]
+		new_ranges.push(ranges[i])
 	}
 
 	// affiche les miniatures de plus haut niveau
-	open_3_(format, ranges, groups)
+	open_3_(format, new_ranges, groups)
 }
 
 function open_3_(format, ranges, groups)
@@ -83,6 +77,7 @@ function open_3_(format, ranges, groups)
 	{
 		queue = list
 		list = []
+		var set = {}
 		while(queue.length)
 		{
 			var tuple = queue.shift()
@@ -93,8 +88,12 @@ function open_3_(format, ranges, groups)
 				{
 					new_tuple[k] = tuple[k].replace(/\{0\}/g, ranges[0][i]).replace(/\{(\d+)\}/g, function(s, n) {return '{' + (n - 1) + '}'})
 				}
-				new_tuple[2] = tuple[2].split(' ').slice(1).join(' ')
-				list.push(new_tuple)
+				new_tuple[2] = tuple[2].split(' ').slice(1).join(' ').replace(/^\*\s*/, '')
+				if(!(new_tuple in set))
+				{
+					set[new_tuple] = true
+					list.push(new_tuple)
+				}
 			}
 		}
 		ranges = ranges.slice(1)
@@ -107,8 +106,12 @@ function open_3_(format, ranges, groups)
 		link.title = list[i][0]
 		var image = link.appendChild(document.createElement('img'))
 		image.alt = ''
-		if(list[i][1].length && groups.length)
+		if(groups.length > 1)
 		{
+			if(!list[i][1].length)
+			{
+				list[i][1] = list[i][0]
+			}
 			link.setAttribute('class', 'small')
 			link.href = list[i][0]
 			link.onclick = open_3_.bind(this, list[i], ranges, groups.slice(1))
