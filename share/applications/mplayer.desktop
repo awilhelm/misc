@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=MPlayer
+NoDisplay=true
+Icon=totem
+TryExec=mplayer
+Exec=mplayer -really-quiet -use-filename-title %U
+Terminal=false
+Categories=AudioVideo;Video;
