@@ -1,0 +1,14 @@
+#!/bin/sh
+
+: ${1:?} # format de l'URL (exemple : http://example.com/%s_%s/%s.jpg)
+: ${@:?} # intervalles à explorer (exemple : 01..12 01..31 01..20)
+
+format="$1"
+shift
+while ! {
+	for a
+	do bash -c "shuf -n1 -e {$a}"
+	done
+} | xargs printf "$format" | wget -nv -i- -c -x --protocol-directories -P "$TMPDIR" 2>&1
+do :
+done | perl -ne 'if(m{ -> "(.*)"}){print $1}'
