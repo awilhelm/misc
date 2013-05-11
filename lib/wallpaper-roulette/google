@@ -1,0 +1,14 @@
+#!/bin/sh
+
+: ${1:?} # recherche (exemple : q=wallpaper&as_st=y&tbs=isz:lt,islt:2mp,iar:w&tbm=isch')
+: ${2:?} # pages à explorer (exemple : 1-10)
+: ${TMPDIR:?}
+
+while ! nm-online -q
+do sleep 1
+done
+
+url=$((($(shuf -n1 -i "$2") - 1) * 10))
+url=$(wget -q -O- "http://www.google.com/search?biw=1000&bih=1000&start=$url&$1" --user-agent='Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0' | perl -ne 'for(m{;imgurl=(.*?)&}g){s{%([0-9a-f]{2})}{chr(hex($1))}eig; s{%([0-9a-f]{2})}{chr(hex($1))}eig; print "$_\n"}' | shuf -n1 | wget -i- -nv -c -x --protocol-directories -P "$TMPDIR" 2>&1 | perl -ne 'if(m{ -> "(.*)"}){print $1}')
+
+test -r "$url" && echo "$url"
