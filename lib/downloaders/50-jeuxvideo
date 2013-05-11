@@ -1,0 +1,14 @@
+#!/bin/sh -e
+
+echo "$1" | grep -qE '\.jeuxvideo\.|0L0Sjeuxvideo0N0C'
+alias perl="$alias_perl"
+
+page=$(wget -q -O- "$1" | perl -ne 'if(m{value="config=(.*?)"}){print $1; exit}' | wget -q -O- -i-)
+: ${page:?}
+
+title=$(echo "$page" | perl -ne 'if(m{<sharing.twitter.text>(.*?)<}){print decode_entities($1)}')
+: ${title:?}
+
+video=$(echo "$page" | perl -ne 'if(m{"taille":"720p","file":"(.*?)"}){print "http://video720.jeuxvideo.com/$1"}')
+
+download-one "$video" "$1" "$XDG_VIDEOS_DIR/$title.mp4"

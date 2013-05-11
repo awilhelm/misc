@@ -1,12 +1,5 @@
 #!/bin/sh
 
-: ${XDG_CONFIG_HOME:="$HOME/.config"}
-. "$XDG_CONFIG_HOME/user-dirs.dirs"
-
-alias perl='perl -CSD -MHTML::Entities -MURI::Escape'
-
-for uri
-do for worker in /usr/local/lib/downloaders/*.sh
-do (. "$worker")
-done
+for resource
+do download-one "$resource"
 done

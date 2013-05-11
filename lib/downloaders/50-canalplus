@@ -1,0 +1,17 @@
+#!/bin/sh -e
+
+echo "$1" | grep -q '\.canalplus\.'
+alias perl="$alias_perl"
+
+page=$(wget -q -O- "$1")
+
+title=$(echo "$page" | perl -ne 'if(m{meta property="og:title" content="(.*?)"}){$_ = $1; y{/}{ }; print}')
+: ${title:?}
+
+video=$(echo "$page" | perl -ne 'if(m{\svideoId="(\w*)"}){print $1}')
+: ${video:?}
+video=$(wget -q -O- "http://service.canal-plus.com/video/rest/getVideosLiees/cplus/$video" | perl -e 'undef $/; $_ = <>; m{<ID>'"$video"'</ID>.*?<HD>(.*?)</HD>}; print $1')
+
+player=$(echo "$page" | perl -ne 'if(m{meta property="og:video" content="(.*?)"}){print $1}')
+
+download-one "$video" "$player" "$XDG_VIDEOS_DIR/$title.mp4"

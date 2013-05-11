@@ -1,0 +1,10 @@
+#!/bin/sh -a
+
+: ${XDG_CONFIG_HOME:="$HOME/.config"}
+. "$XDG_CONFIG_HOME/user-dirs.dirs"
+
+alias_perl='perl -CSD -MHTML::Entities -MURI::Escape'
+
+for worker in /usr/local/lib/downloaders/*
+do "$worker" "$@" && exit
+done
