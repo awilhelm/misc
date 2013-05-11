@@ -1,7 +1,0 @@
-#!/bin/sh
-
-: ${1:?} # nouvel intervalle
-: ${TMPDIR:?}
-
-echo "$1" >"$TMPDIR/interval"
-next

@@ -1,6 +1,6 @@
 [Desktop Entry]
 Comment=Fetch a new wallpaper every X minutes
-Exec=wallpaper-roulette 1200 default
+Exec=wallpaper-roulette default
 Icon=preferences-desktop-wallpaper
 Name=Random Wallpaper
 Terminal=false

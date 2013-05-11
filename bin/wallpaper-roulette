@@ -1,40 +1,49 @@
 #!/bin/sh
 
-pid=$(pgrep -u "$USER" -x wallpaper-roule)
-pid=$(echo "$pid" | grep -v ^$$$ | tr [:space:] ,)
-
+export LC_ALL=C
 export PATH="$(dirname "$0")/../lib/wallpaper-roulette:$PATH"
-
 export TMPDIR="${XDG_CACHE_HOME:="$HOME/.cache"}/wallpaper-roulette"
+
+# update the command
 mkdir -p "$TMPDIR"
-
-if ! [ "$pid" ]
-then echo "$1" >"$TMPDIR/interval"
-shift
+if [ "$*" ]
+then
+	for a
+	do echo "$a"
+	done >"$TMPDIR/cmd"
+else
+	touch "$TMPDIR/cmd"
 fi
 
-mv "$TMPDIR/cmd" "$TMPDIR/cmd~"
-for a
-do echo "$a"
-done >"$TMPDIR/cmd"
+# exit if the daemon is already running
+pid="$(pgrep -u "$USER" -x wallpaper-roule)"
+echo "$pid" | grep -qv ^$$$ && exit
 
-if ! [ "$pid" ]
-then while true
+while sleep 1
 do
-	while test $(du -sB1 "$TMPDIR" | cut -f1) -gt 500000000
-	do find "$TMPDIR" -type f | xargs -rd \\n ls -rt | head -1 | xargs -rd \\n rm
-	done
 
-	while ! LC_ALL=C gnome-screensaver-command -q | grep -q 'inactive'
-	do sleep 1
-	done
+# wait for the command's modification date to change
+now="$(stat -c%Y "$TMPDIR/cmd")"
+[ "$now" = "$before" ] && continue
+before="$now"
 
-	{
-		file=$(xargs -rd \\n env <"$TMPDIR/cmd") || continue
-		touch -c "$file"
-		gsettings set org.gnome.desktop.background picture-uri "file://$file"
-	} 2>&1 | awk '{print "icon: preferences-desktop-wallpaper"; print "message: " $0}'
-	xargs sleep <"$TMPDIR/interval"
+{
+
+# do nothing while the screen saver is running
+gnome-screensaver-command -q | grep -q 'inactive' || continue
+
+# make sure the cache does not grow too large
+while test $(du -sB1 "$TMPDIR" | cut -f1) -gt 500000000
+do find "$TMPDIR" -mindepth 2 -type f | xargs -rd \\n ls -rt 2>/dev/null | head -1 | xargs -rd \\n rm
+done
+find "$TMPDIR" -empty -delete
+
+# fetch an image
+while ! file=$(xargs -rd \\n env <"$TMPDIR/cmd")
+do sleep 1
+done
+
+touch -c "$file"
+gsettings set org.gnome.desktop.background picture-uri "file://$file"
+} 2>&1 | awk '{print "icon: preferences-desktop-wallpaper"; print "message: " $0}'
 done | zenity --notification --listen
-else pkill -P "$pid" xargs
-fi
