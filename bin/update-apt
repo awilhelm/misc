@@ -10,6 +10,7 @@
 ## Utilisation: update-apt wanted.list
 
 [ "$*" ] || set -- /usr/local/etc/apt/wanted.list
+: ${recommends:=without}
 
 # Lit la liste des choses à faire.
 input=$(cat "$@" | cut -d# -f1 | tr -d [:blank:] | grep .)
@@ -25,7 +26,8 @@ mv /var/lib/dpkg/status "$orig"
 
 # Trouve tous les paquets à installer.
 log=$(mktemp)
-aptitude --simulate --assume-yes --allow-untrusted --full-resolver --without-recommends install $install >"$log"
+trap "rm '$log'" 0 2 3 9 15
+aptitude --simulate --assume-yes --allow-untrusted --full-resolver --$recommends-recommends install $install >"$log"
 
 # Rétablit la liste des paquets installés.
 mv "$orig" /var/lib/dpkg/status
@@ -33,7 +35,6 @@ mv "$orig" /var/lib/dpkg/status
 # Récupère la liste des paquets à installer.
 begin=$({ echo 0; grep -n '^$' "$log"; } | tail -1 | cut -d: -f1)
 goal=$(tail -n+$begin "$log" | grep '^[[:blank:]]' | tr -s [:space:] '\n' | sed 's/{.*}$//')
-rm "$log"
 
 # Applique les modifications.
-aptitude --prompt --full-resolver --without-recommends install '!~v_' '!~v&M' $goal $mark $keep
+aptitude --prompt --full-resolver --$recommends-recommends install '!~v_' '!~v&M' $goal $mark $keep
