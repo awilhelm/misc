@@ -5,7 +5,7 @@ alias perl="$alias_perl"
 
 page=$(wget -q -O- "$1")
 
-title=$(echo "$page" | perl -ne 'y{/}{:}; if(m{<h1>(.*)<:h1>}){print decode_entities($1)}')
+title=$(echo "$page" | perl -ne 'y{/}{\N{U+2215}}; if(m{<h1>(.*)<.h1>}){print decode_entities($1)}')
 : ${title:=$(basename "$1" .html)}
 
 date=$(echo "$page" | perl -ne 'if(m{\W(\d\d)-(\d\d)-(\d\d)\W}){print "20$3-$2-$1"; exit}')
