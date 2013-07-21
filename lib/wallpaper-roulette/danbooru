@@ -12,7 +12,7 @@ done
 read width height ratio <<eof
 $(xdpyinfo | perl -ne '
 	if(m{dimensions:\s*(\d+)x(\d+)}){
-		print "$1 $2 ", ($1 / $2) ** .75;
+		print "$1 $2 ", $1 / $2;
 		exit}
 ')
 eof
@@ -23,7 +23,8 @@ mkdir -p "$local"
 remote=$(shuf -n1 -i "$3")
 remote=$(wget -q -O- "$1/post/index.json?page=$remote&tags=width:$width..+height:$height..+$2" | perl -MJSON::PP -e '
 	for(@{decode_json <>}){
-		if($$_{width} / $$_{height} > '"$ratio"'){
+		my $x = $$_{width} / $$_{height} / '"$ratio"';
+		if($x >= .9 && $x <= 1.5){
 			$$_{tags} =~ s{([[:punct:]])}{sprintf("%%%x",ord($1))}eg;
 			$$_{file_url} =~ m{(\.[^\.]*)$};
 			print "$$_{md5}$1 $$_{file_url} $$_{rating} $$_{score} $$_{tags}\n"}}
