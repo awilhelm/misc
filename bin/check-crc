@@ -6,14 +6,14 @@ for path in sys.argv[1:]:
 	try:
 		sum = 0
 		file = open(path, "rb")
+		real_sum = re.split("([a-fA-F0-9]{8})", path)[-2]
+		path = path.split(real_sum)
 		while True:
 			buffer = file.read(2 ** 20)
 			if not buffer: break
 			sum = zlib.crc32(buffer, sum)
 		file.close();
 		sum = "%.8X" % (sum & 2 ** 32 - 1)
-		real_sum = re.split("([a-fA-F0-9]{8})", path)[-2]
-		path = path.split(real_sum)
 		if sum == real_sum.upper(): color = '\033[32m'
 		else: color = '\033[31m'
 		print "%s%s\033[m %s%s%s\033[m%s" % (color, sum, path[0], color, real_sum, path[1])
