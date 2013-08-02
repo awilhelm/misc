@@ -3,16 +3,12 @@
 echo "$1" | grep -q '\.arte\.'
 alias perl="$alias_perl"
 
-page=$(wget -q -O- "$1")
+json=$(wget -q -O- "$1" | perl -ne 'if(m{arte_vp_url="(.*?)"}){print $1; exit}')
 
-title=$(echo "$page" | perl -ne 'y{/}{\N{U+2215}}; if(m{<h1>(.*)<.h1>}){print decode_entities($1)}')
-: ${title:=$(basename "$1" .html)}
+title=$(wget -q -O- "$json" | perl -ne 'y{/}{\N{U+2215}}; m{"VTI":"(.*?)"}; print $1; if(m{"VSU":"(.*?)"}){print " - $1"}')
+: ${title:?}
 
-date=$(echo "$page" | perl -ne 'if(m{\W(\d\d)-(\d\d)-(\d\d)\W}){print "20$3-$2-$1"; exit}')
-: ${date:?}
+video=$(wget -q -O- "http://www.arte.tv/player/v2/smil.smil?json_url=$json&smil_entries=RTMP_SQ_1,RTMP_MQ_1,RTMP_LQ_1" | tr -d [:space:] | perl -ne 'm{base="(.*?)".*?src="(.*?)"}; print "$1$2"')
+: ${video:?}
 
-video=$(echo "$page" | perl -ne 'if(m{vars_player.videorefFileUrl\s*=\s*"(.*?)"}){print $1}' | wget -q -i- -O- | perl -ne 'if(m{lang="fr".*?ref="(.*?)"}){print $1}' | wget -q -i- -O- | perl -ne 'if(m{quality="hd".*?>(.*?)<}){print $1}')
-
-player=$(echo "$page" | perl -ne 'if(m{var url_player\s*=\s*"(.*?)"}){print $1}')
-
-download-one "$video" "$player" "$XDG_VIDEOS_DIR/$title $date.mp4"
+download-one "$video" 'http://www.arte.tv/player/v2/jwplayer6/mediaplayer.6.3.3242.swf' "$XDG_VIDEOS_DIR/$title.mp4"
